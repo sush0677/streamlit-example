@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 import requests
 
 # Define the base URL for the Flask API
@@ -12,12 +11,6 @@ def upload_file(file):
     response = requests.post(url, files=files)
     return response.json()
 
-# Function to download the trained model
-def download_model():
-    url = f"{BASE_URL}/download_model"
-    response = requests.get(url)
-    return response.content
-
 # Function to display plots
 def display_plot(plot_name):
     url = f"{BASE_URL}/plot/{plot_name}"
@@ -27,7 +20,7 @@ def display_plot(plot_name):
 # Main function for the Streamlit app
 def main():
     st.title("Machine Learning Model Deployment")
-    st.markdown("This web app allows you to upload a CSV file, train a machine learning model, and download the trained model.")
+    st.markdown("This web app allows you to upload a CSV file, train a machine learning model, and view evaluation plots.")
 
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Go to", ("Home", "About", "Contact"))
@@ -49,11 +42,6 @@ def main():
     elif page == "Contact":
         st.subheader("Contact Us")
         st.write("For any inquiries, please email us at example@example.com")
-
-    st.sidebar.title("Additional Options")
-    if st.sidebar.button("Download Trained Model"):
-        model_content = download_model()
-        st.download_button(label="Download Model", data=model_content, file_name="stacking_model.pkl", mime="application/octet-stream")
 
     if st.sidebar.checkbox("Show Evaluation Plots"):
         st.subheader("Evaluation Plots")
