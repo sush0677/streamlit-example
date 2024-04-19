@@ -64,7 +64,7 @@ def main():
         if st.button("Translate to Arabic"):
             try:
                 results = seq_chain.run(review=user_input)
-                english_text = results['english_text']
+                english_text = print(results['english_text'])
                 st.text_area("Translated Text:", english_text, height=150)
             except Exception as e:
                 st.error(f"Translation failed: {str(e)}")
