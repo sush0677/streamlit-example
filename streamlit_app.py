@@ -10,7 +10,7 @@ from langchain.prompts import (
     AIMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
-from langchain.chains import SequentialChain
+from langchain.chains import LLMChain, SequentialChain
 import streamlit as st
 from fpdf import FPDF
 import os
@@ -44,7 +44,7 @@ seq_chain = SequentialChain(chains=[chain_1,chain_2,chain_3],
                             input_variables=['review'],
                             output_variables=['english_text','Arabic_text','final_plan'],
                             verbose=True)
-                            
+
 # Function to handle file upload and text input
 def get_input_text():
     input_text = st.text_area("Enter text to process or upload a file:", height=150)
