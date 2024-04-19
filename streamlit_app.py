@@ -63,15 +63,21 @@ def main():
     if user_input:
         if st.button("Translate to Arabic"):
             try:
-                # Run only the first chain
+                # Run only the first chain and check the output
                 english_result = chain_1.run(review=user_input)
-                english_text = english_result['english_text']
-                st.text_area("Translated Text:", english_text, height=150)
+                if isinstance(english_result, dict) and 'english_text' in english_result:
+                    english_text = english_result['english_text']
+                    st.text_area("Translated Text:", english_text, height=150)
 
-                # Now run the second chain using the output of the first
-                arabic_result = chain_2.run(english_text=english_text)
-                arabic_text = arabic_result['Arabic_text']
-                st.session_state['arabic_text'] = arabic_text  # Save Arabic text for other operations
+                    # Now run the second chain using the output of the first and check the output
+                    arabic_result = chain_2.run(english_text=english_text)
+                    if isinstance(arabic_result, dict) and 'Arabic_text' in arabic_result:
+                        arabic_text = arabic_result['Arabic_text']
+                        st.session_state['arabic_text'] = arabic_text  # Save Arabic text for other operations
+                    else:
+                        st.error("Failed to get Arabic translation. Check model output.")
+                else:
+                    st.error("Failed to translate text to English properly. Check model output.")
 
             except Exception as e:
                 st.error(f"Translation failed: {str(e)}")
@@ -88,10 +94,13 @@ def main():
                     arabic_result = chain_2.run(english_text=english_text)
                     arabic_text = arabic_result['Arabic_text']
 
-                # Run the summarization chain
+                # Run the summarization chain and check the output
                 summarized_result = chain_3.run(Arabic_text=arabic_text)
-                summarized_text = summarized_result['final_plan']
-                st.text_area("Arabic Summary:", summarized_text, height=150)
+                if isinstance(summarized_result, dict) and 'final_plan' in summarized_result:
+                    summarized_text = summarized_result['final_plan']
+                    st.text_area("Arabic Summary:", summarized_text, height=150)
+                else:
+                    st.error("Failed to summarize the text. Check model output.")
 
             except Exception as e:
                 st.error(f"Summarization failed: {str(e)}")
