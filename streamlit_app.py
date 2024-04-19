@@ -45,71 +45,47 @@ seq_chain = SequentialChain(chains=[chain_1,chain_2,chain_3],
                             output_variables=['english_text','Arabic_text','final_plan'],
                             verbose=True)
 
-# Function to handle file upload and text input
-def get_input_text():
-    input_text = st.text_area("Enter text to process or upload a file:", height=150)
-    uploaded_file = st.file_uploader("Or upload a text file:", type=['txt'])
-    if uploaded_file is not None:
-        # Read the content of the uploaded file
-        input_text = str(uploaded_file.read(), 'utf-8')
-    return input_text
-
-# Function to create PDF from text data
-def create_pdf(english_text, arabic_text, summarized_text):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="English Text:", ln=True)
-    pdf.multi_cell(0, 10, english_text)
-    pdf.cell(200, 10, txt="Arabic Translation:", ln=True)
-    pdf.multi_cell(0, 10, arabic_text)
-    pdf.cell(200, 10, txt="Summarized Arabic Text:", ln=True)
-    pdf.multi_cell(0, 10, summarized_text)
-    filename = 'Text_Summary.pdf'
-    pdf.output(filename)
-    return filename
-
 def main():
     st.title("Text Processing App")
-
-    # Retrieve user input
     user_input = get_input_text()
 
     if st.button("Translate to Arabic"):
         if user_input:
-            # Process translation
-            english_text = seq_chain.run(review=user_input)['english_text']
-            st.text_area("Translated Text:", english_text, height=150)
-        else:
-            st.warning("Please enter text or upload a file to translate.")
+            try:
+                results = seq_chain.run(review=user_input)
+                english_text = results['english_text']
+                st.text_area("Translated Text:", english_text, height=150)
+            except Exception as e:
+                st.error(f"Failed to translate due to: {str(e)}")
 
     if st.button("Summarize in Arabic"):
         if user_input:
-            # Process summarization
-            result = seq_chain.run(review=user_input)
-            arabic_text = result['Arabic_text']
-            summarized_text = result['final_plan']
-            st.text_area("Arabic Summary:", summarized_text, height=150)
-        else:
-            st.warning("Please enter text or upload a file to summarize.")
+            try:
+                results = seq_chain.run(review=user_input)
+                arabic_text = results['Arabic_text']
+                summarized_text = results['final_plan']
+                st.text_area("Arabic Summary:", summarized_text, height=150)
+            except Exception as e:
+                st.error(f"Failed to summarize due to: {str(e)}")
 
     if st.button("Download PDF"):
         if user_input:
-            # Generate PDF
-            result = seq_chain.run(review=user_input)
-            english_text = result['english_text']
-            arabic_text = result['Arabic_text']
-            summarized_text = result['final_plan']
-            pdf_filename = create_pdf(english_text, arabic_text, summarized_text)
-            with open(pdf_filename, "rb") as file:
-                btn = st.download_button(
-                    label="Download Text Summary",
-                    data=file,
-                    file_name=pdf_filename,
-                    mime="application/octet-stream"
-                )
-        else:
-            st.warning("Please enter text or upload a file to generate PDF.")
+            try:
+                results = seq_chain.run(review=user_input)
+                english_text = results['english_text']
+                arabic_text = results['Arabic_text']
+                summarized_text = results['final_plan']
+                pdf_filename = create_pdf(english_text, arabic_text, summarized_text)
+                with open(pdf_filename, "rb") as file:
+                    btn = st.download_button(
+                        label="Download Text Summary",
+                        data=file,
+                        file_name=pdf_filename,
+                        mime="application/octet-stream"
+                    )
+            except Exception as e:
+                st.error(f"Failed to generate PDF due to: {str(e)}")
 
 if __name__ == "__main__":
     main()
+    
