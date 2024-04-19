@@ -8,4 +8,3 @@ langchain
 openai
 langchain_openai
 fpdf
-os
