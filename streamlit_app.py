@@ -16,34 +16,7 @@ from fpdf import FPDF
 import os
 
 # Assuming the SequentialChain and LLMChain have been set up as described in your code snippet
-# Create an instance of the AzureChatOpenAI model
-model = AzureChatOpenAI(
-    deployment_name="exq-gpt-35",
-    azure_endpoint="https://exquitech-openai-2.openai.azure.com/",
-    api_key="4f00a70876a542a18b30f13570248cdb",
-    temperature=0,
-    openai_api_version="2024-02-15-preview"
-)
 
-template1 = "Provide me with the following English text :\n{review}"
-prompt1 = ChatPromptTemplate.from_template(template1)
-chain_1 = LLMChain(llm=model,
-                     prompt=prompt1,
-                     output_key="english_text")
-template2 = "Translate the following text into Arabic text  :\n{english_text}"
-prompt2 = ChatPromptTemplate.from_template(template2)
-chain_2 = LLMChain(llm=model,
-                     prompt=prompt2,
-                     output_key="Arabic_text")
-template3 = "Summarize the following text in Arabic language :\n{Arabic_text}"
-prompt3 = ChatPromptTemplate.from_template(template3)
-chain_3 = LLMChain(llm=model,
-                     prompt=prompt3,
-                     output_key="final_plan")
-seq_chain = SequentialChain(chains=[chain_1,chain_2,chain_3],
-                            input_variables=['review'],
-                            output_variables=['english_text','Arabic_text','final_plan'],
-                            verbose=True)
 
 # Function to handle file upload and text input
 def get_input_text():
@@ -70,6 +43,34 @@ def create_pdf(english_text, arabic_text, summarized_text):
     return filename
 
 def main():
+        # Create an instance of the AzureChatOpenAI model
+    model = AzureChatOpenAI(
+        deployment_name="exq-gpt-35",
+        azure_endpoint="https://exquitech-openai-2.openai.azure.com/",
+        api_key="4f00a70876a542a18b30f13570248cdb",
+        temperature=0,
+        openai_api_version="2024-02-15-preview"
+    )
+
+    template1 = "Provide me with the following English text :\n{review}"
+    prompt1 = ChatPromptTemplate.from_template(template1)
+    chain_1 = LLMChain(llm=model,
+                        prompt=prompt1,
+                        output_key="english_text")
+    template2 = "Translate the following text into Arabic text  :\n{english_text}"
+    prompt2 = ChatPromptTemplate.from_template(template2)
+    chain_2 = LLMChain(llm=model,
+                        prompt=prompt2,
+                        output_key="Arabic_text")
+    template3 = "Summarize the following text in Arabic language :\n{Arabic_text}"
+    prompt3 = ChatPromptTemplate.from_template(template3)
+    chain_3 = LLMChain(llm=model,
+                        prompt=prompt3,
+                        output_key="final_plan")
+    seq_chain = SequentialChain(chains=[chain_1,chain_2,chain_3],
+                                input_variables=['review'],
+                                output_variables=['english_text','Arabic_text','final_plan'],
+                                verbose=True)
     st.title("Text Processing App")
     user_input = get_input_text()
 
