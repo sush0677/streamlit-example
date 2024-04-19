@@ -75,20 +75,20 @@ def main():
 
     if st.button("Translate to Arabic"):
         if user_input:
-            results = seq_chain.run(review=user_input)
+            results = seq_chain.run(user_input)
             english_text = print(results['english_text'])
             st.text_area("Translated Text:", english_text, height=150)
 
     if st.button("Summarize in Arabic"):
         if user_input:
-            results = seq_chain.run(review=user_input)
+            results = seq_chain.run(user_input)
             arabic_text = print(results['Arabic_text'])
             summarized_text = print(results['final_plan'])
             st.text_area("Arabic Summary:", summarized_text, height=150)
 
     if st.button("Download PDF"):
         if user_input:
-            results = seq_chain.run(review=user_input)
+            results = seq_chain.run(user_input)
             english_text = print(results['english_text'])
             arabic_text = print(results['Arabic_text'])
             summarized_text = print(results['final_plan'])
