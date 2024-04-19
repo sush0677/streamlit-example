@@ -72,21 +72,23 @@ def create_pdf(english_text, arabic_text, summarized_text):
 def main():
     st.title("Text Processing App")
     user_input = get_input_text()
-    results = seq_chain.run(review=user_input)
 
     if st.button("Translate to Arabic"):
         if user_input:
+            results = seq_chain.run(review=user_input)
             english_text = print(results['english_text'])
             st.text_area("Translated Text:", english_text, height=150)
 
     if st.button("Summarize in Arabic"):
         if user_input:
+            results = seq_chain.run(review=user_input)
             arabic_text = print(results['Arabic_text'])
             summarized_text = print(results['final_plan'])
             st.text_area("Arabic Summary:", summarized_text, height=150)
 
     if st.button("Download PDF"):
         if user_input:
+            results = seq_chain.run(review=user_input)
             english_text = print(results['english_text'])
             arabic_text = print(results['Arabic_text'])
             summarized_text = print(results['final_plan'])
