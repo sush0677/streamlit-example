@@ -65,7 +65,7 @@ def main():
             try:
                 english_result = chain_1.run(review=user_input)
                 if isinstance(english_result, dict) and 'english_text' in english_result:
-                    english_text = english_result['english_text']
+                    english_text = print(english_result['english_text'])
                     st.text_area("Translated Text:", english_text, height=150)
                 else:
                     st.error("Unexpected output format from translation chain.")
