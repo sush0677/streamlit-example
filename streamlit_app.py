@@ -1,30 +1,21 @@
 import streamlit as st
-import os
+from fpdf import FPDF
 from azure.identity import ChainedTokenCredential, ManagedIdentityCredential, AzureCliCredential
 from langchain_core.messages import HumanMessage
 from langchain_openai import AzureChatOpenAI
-from langchain.prompts import (
-    ChatPromptTemplate,
-    PromptTemplate,
-    SystemMessagePromptTemplate,
-    AIMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-)
+from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.chains import LLMChain, SequentialChain
-import streamlit as st
-from io import BytesIO
-from fpdf import FPDF
 
-# Assuming your Azure/OpenAI SDK and specific API classes/methods are properly defined and imported
-# Example setup for model and chains
+# Initialize the AzureChatOpenAI model
 model = AzureChatOpenAI(
     deployment_name="exq-gpt-35",
     azure_endpoint="https://exquitech-openai-2.openai.azure.com/",
-    api_key="your_api_key",
+    api_key="4f00a70876a542a18b30f13570248cdb",
     temperature=0,
     openai_api_version="2024-02-15-preview"
 )
 
+# Setup for sequential chains
 template1 = "Provide me with the following English text :\n{review}"
 prompt1 = ChatPromptTemplate.from_template(template1)
 chain_1 = LLMChain(llm=model, prompt=prompt1, output_key="english_text")
@@ -37,45 +28,69 @@ template3 = "Summarize the following text in Arabic language :\n{Arabic_text}"
 prompt3 = ChatPromptTemplate.from_template(template3)
 chain_3 = LLMChain(llm=model, prompt=prompt3, output_key="final_plan")
 
-seq_chain = SequentialChain(
-    chains=[chain_1, chain_2, chain_3],
-    input_variables=['review'],
-    output_variables=['english_text', 'Arabic_text', 'final_plan'],
-    verbose=True
-)
+seq_chain = SequentialChain(chains=[chain_1, chain_2, chain_3],
+                            input_variables=['review'],
+                            output_variables=['english_text', 'Arabic_text', 'final_plan'],
+                            verbose=True)
 
-def process_text(review):
-    # Execute the sequential chain and return results
-    results = seq_chain(review)
-    return print(results['english_text']),print(results['Arabic_text']), print(results['final_plan'])
+# Function to handle file upload and text input
+def get_input_text():
+    input_text = st.text_area("Enter text to process or upload a file:", height=150)
+    uploaded_file = st.file_uploader("Or upload a text file:", type=['txt'])
+    if uploaded_file is not None:
+        input_text = str(uploaded_file.read(), 'utf-8')
+    return input_text
 
-def save_pdf(english, arabic, summary):
+# Function to create a PDF from text data
+def create_pdf(english_text, arabic_text, summarized_text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt="English Text:", ln=True)
-    pdf.multi_cell(0, 10, english)
+    pdf.multi_cell(0, 10, english_text)
     pdf.cell(200, 10, txt="Arabic Translation:", ln=True)
-    pdf.multi_cell(0, 10, arabic)
+    pdf.multi_cell(0, 10, arabic_text)
     pdf.cell(200, 10, txt="Summarized Arabic Text:", ln=True)
-    pdf.multi_cell(0, 10, summary)
-    pdf_output = BytesIO()
-    pdf.output(pdf_output)
-    pdf_output.seek(0)
-    return pdf_output
+    pdf.multi_cell(0, 10, summarized_text)
+    filename = 'Text_Summary.pdf'
+    pdf.output(filename)
+    return filename
 
-st.title("Text Processing App")
-review_text = st.text_area("Enter your review text here:")
+def main():
+    st.title("Text Processing App")
+    user_input = get_input_text()
 
-if st.button("Process Text"):
-    if review_text:
-        english_text, arabic_text, summary = process_text(review_text)
-        st.write("English Text:", english_text)
-        st.write("Arabic Translation:", arabic_text)
-        st.write("Arabic Summary:", summary)
+    if user_input:
+        if st.button("Translate to Arabic"):
+            try:
+                results = seq_chain.run(review=user_input)
+                english_text = results['english_text']
+                st.text_area("Translated Text:", english_text, height=150)
+            except Exception as e:
+                st.error(f"Translation failed: {str(e)}")
 
-        pdf = save_pdf(english_text, arabic_text, summary)
-        st.download_button(label="Download Processed Texts as PDF", data=pdf, file_name="processed_texts.pdf", mime='application/pdf')
+        if st.button("Summarize in Arabic"):
+            try:
+                results = seq_chain.run(review=user_input)
+                arabic_text = results['Arabic_text']
+                summarized_text = results['final_plan']
+                st.text_area("Arabic Summary:", summarized_text, height=150)
+            except Exception as e:
+                st.error(f"Summarization failed: {str(e)}")
+
+        if st.button("Download PDF"):
+            try:
+                results = seq_chain.run(review=user_input)
+                english_text = results['english_text']
+                arabic_text = results['Arabic_text']
+                summarized_text = results['final_plan']
+                pdf_filename = create_pdf(english_text, arabic_text, summarized_text)
+                with open(pdf_filename, "rb") as file:
+                    st.download_button("Download Text Summary", file, file_name=pdf_filename, mime="application/octet-stream")
+            except Exception as e:
+                st.error(f"PDF creation failed: {str(e)}")
     else:
-        st.error("Please enter text to process.")
+        st.warning("Please enter text or upload a file to proceed.")
 
+if __name__ == "__main__":
+    main()
