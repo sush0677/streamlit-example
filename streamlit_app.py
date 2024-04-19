@@ -47,7 +47,7 @@ seq_chain = SequentialChain(
 def process_text(review):
     # Execute the sequential chain and return results
     results = seq_chain(review)
-    return results['english_text'], results['Arabic_text'], results['final_plan']
+    return print(results['english_text']),print(results['Arabic_text']), print(results['final_plan'])
 
 def save_pdf(english, arabic, summary):
     pdf = FPDF()
