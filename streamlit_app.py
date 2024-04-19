@@ -63,30 +63,54 @@ def main():
     if user_input:
         if st.button("Translate to Arabic"):
             try:
-                results = seq_chain.run(review=user_input)
-                english_text = print(results['english_text'])
+                # Run only the first chain
+                english_result = chain_1.run(review=user_input)
+                english_text = english_result['english_text']
                 st.text_area("Translated Text:", english_text, height=150)
+
+                # Now run the second chain using the output of the first
+                arabic_result = chain_2.run(english_text=english_text)
+                arabic_text = arabic_result['Arabic_text']
+                st.session_state['arabic_text'] = arabic_text  # Save Arabic text for other operations
+
             except Exception as e:
                 st.error(f"Translation failed: {str(e)}")
 
         if st.button("Summarize in Arabic"):
             try:
-                results = seq_chain.run(review=user_input)
-                arabic_text = results['Arabic_text']
-                summarized_text = results['final_plan']
+                # Check if Arabic text is already processed or needs to be processed
+                if 'arabic_text' in st.session_state:
+                    arabic_text = st.session_state['arabic_text']
+                else:
+                    # If not processed, run the first and second chains again
+                    english_result = chain_1.run(review=user_input)
+                    english_text = english_result['english_text']
+                    arabic_result = chain_2.run(english_text=english_text)
+                    arabic_text = arabic_result['Arabic_text']
+
+                # Run the summarization chain
+                summarized_result = chain_3.run(Arabic_text=arabic_text)
+                summarized_text = summarized_result['final_plan']
                 st.text_area("Arabic Summary:", summarized_text, height=150)
+
             except Exception as e:
                 st.error(f"Summarization failed: {str(e)}")
 
         if st.button("Download PDF"):
             try:
-                results = seq_chain.run(review=user_input)
-                english_text = results['english_text']
-                arabic_text = results['Arabic_text']
-                summarized_text = results['final_plan']
+                # Ensure all chains have been processed
+                english_result = chain_1.run(review=user_input)
+                english_text = english_result['english_text']
+                arabic_result = chain_2.run(english_text=english_text)
+                arabic_text = arabic_result['Arabic_text']
+                summarized_result = chain_3.run(Arabic_text=arabic_text)
+                summarized_text = summarized_result['final_plan']
+
+                # Create and download PDF
                 pdf_filename = create_pdf(english_text, arabic_text, summarized_text)
                 with open(pdf_filename, "rb") as file:
                     st.download_button("Download Text Summary", file, file_name=pdf_filename, mime="application/octet-stream")
+
             except Exception as e:
                 st.error(f"PDF creation failed: {str(e)}")
     else:
