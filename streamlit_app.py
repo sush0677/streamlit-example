@@ -15,19 +15,6 @@ model = AzureChatOpenAI(
     openai_api_version="2024-02-15-preview"
 )
 
-# Setup for sequential chains
-template1 = "Provide me with the following English text :\n{review}"
-prompt1 = ChatPromptTemplate.from_template(template1)
-chain_1 = LLMChain(llm=model, prompt=prompt1, output_key="english_text")
-
-template2 = "Translate the following text into Arabic text :\n{english_text}"
-prompt2 = ChatPromptTemplate.from_template(template2)
-chain_2 = LLMChain(llm=model, prompt=prompt2, output_key="Arabic_text")
-
-template3 = "Summarize the following text in Arabic language :\n{Arabic_text}"
-prompt3 = ChatPromptTemplate.from_template(template3)
-chain_3 = LLMChain(llm=model, prompt=prompt3, output_key="final_plan")
-
 # Function to handle file upload and text input
 def get_input_text():
     input_text = st.text_area("Enter text to process or upload a file:", height=150)
@@ -51,54 +38,53 @@ def create_pdf(english_text, arabic_text, summarized_text):
     pdf.output(filename)
     return filename
 
+# Run the sequential chain function
+def run_sequential_chains(user_input):
+    # Setup for sequential chains
+    template1 = "Provide me with the following English text :\n{user_input}"
+    prompt1 = ChatPromptTemplate.from_template(template1)
+    chain_1 = LLMChain(llm=model, prompt=prompt1, output_key="english_text")
+
+    template2 = "Translate the following text into Arabic text :\n{english_text}"
+    prompt2 = ChatPromptTemplate.from_template(template2)
+    chain_2 = LLMChain(llm=model, prompt=prompt2, output_key="Arabic_text")
+
+    template3 = "Summarize the following text in Arabic language :\n{Arabic_text}"
+    prompt3 = ChatPromptTemplate.from_template(template3)
+    chain_3 = LLMChain(llm=model, prompt=prompt3, output_key="final_plan")
+
+    seq_chain = SequentialChain(chains=[chain_1, chain_2, chain_3],
+                                input_variables=['user_input'],  # Use the variable directly in your template
+                                output_variables=['english_text', 'Arabic_text', 'final_plan'],
+                                verbose=True)
+    return seq_chain.run(user_input=user_input)
+
 def main():
     st.title("Text Processing App")
     user_input = get_input_text()
 
     if user_input:
-        if st.button("Translate to Arabic"):
-            try:
-                english_result = chain_1.run(review=user_input)
-                if isinstance(english_result, dict) and 'english_text' in english_result:
-                    english_text = english_result['english_text']
-                    st.session_state['english_text'] = english_text  # Store to session state
-                    st.text_area("Translated Text:", english_text, height=150)
-                else:
-                    st.error("Unexpected output format from translation chain.")
-            except Exception as e:
-                st.error(f"Translation failed: {str(e)}")
+        results = st.session_state.get('results')
+        if st.button("Process Text"):
+            results = run_sequential_chains(user_input)
+            st.session_state['results'] = results  # Store results in session state
+            st.success("Processing complete!")
 
-        if st.button("Summarize in Arabic"):
-            try:
-                if 'english_text' not in st.session_state:
-                    st.error("No English text available to translate to Arabic. Please translate first.")
-                else:
-                    arabic_result = chain_2.run(english_text=st.session_state['english_text'])
-                    if isinstance(arabic_result, dict) and 'Arabic_text' in arabic_result:
-                        arabic_text = arabic_result['Arabic_text']
-                        st.session_state['arabic_text'] = arabic_text  # Store to session state
-                        summarized_result = chain_3.run(Arabic_text=arabic_text)
-                        if isinstance(summarized_result, dict) and 'final_plan' in summarized_result:
-                            summarized_text = summarized_result['final_plan']
-                            st.session_state['final_plan'] = summarized_text  # Store to session state
-                            st.text_area("Arabic Summary:", summarized_text, height=150)
-                        else:
-                            st.error("Unexpected output format from summarization chain.")
-                    else:
-                        st.error("Unexpected output format from translation chain.")
-            except Exception as e:
-                st.error(f"Summarization failed: {str(e)}")
+        if st.button("Show Arabic Translation") and results:
+            arabic_text = results.get('Arabic_text', "No Arabic text found.")
+            st.text_area("Arabic Translation:", arabic_text, height=150)
 
-        if st.button("Download PDF"):
-            try:
-                if 'english_text' not in st.session_state or 'arabic_text' not in st.session_state or 'final_plan' not in st.session_state:
-                    st.error("Please ensure text is translated and summarized before downloading.")
-                else:
-                    pdf_filename = create_pdf(st.session_state['english_text'], st.session_state['arabic_text'], st.session_state['final_plan'])
-                    with open(pdf_filename, "rb") as file:
-                        st.download_button("Download Text Summary", file, file_name=pdf_filename, mime="application/octet-stream")
-            except Exception as e:
-                st.error(f"PDF creation failed: {str(e)}")
+        if st.button("Show Arabic Summary") and results:
+            summarized_text = results.get('final_plan', "No summary available.")
+            st.text_area("Arabic Summary:", summarized_text, height=150)
+
+        if st.button("Download PDF") and results:
+            english_text = results.get('english_text', "")
+            arabic_text = results.get('Arabic_text', "")
+            summarized_text = results.get('final_plan', "")
+            pdf_filename = create_pdf(english_text, arabic_text, summarized_text)
+            with open(pdf_filename, "rb") as file:
+                st.download_button("Download Text Summary", file, file_name=pdf_filename, mime="application/octet-stream")
     else:
         st.warning("Please enter text or upload a file to proceed.")
 
