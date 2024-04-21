@@ -54,7 +54,7 @@ def run_sequential_chains(user_input):
     chain_3 = LLMChain(llm=model, prompt=prompt3, output_key="final_plan")
 
     seq_chain = SequentialChain(chains=[chain_1, chain_2, chain_3],
-                                input_variables=['user_input'],  # Use the variable directly in your template
+                                input_variables=user_input,  # Use the variable directly in your template
                                 output_variables=['english_text', 'Arabic_text', 'final_plan'],
                                 verbose=True)
     return seq_chain.run(user_input)
