@@ -14,7 +14,6 @@ model = AzureChatOpenAI(
     temperature=0,
     openai_api_version="2024-02-15-preview"
 )
-
 # Function to handle file upload and text input
 def get_input_text():
     input_text = st.text_area("Enter text to process or upload a file:", height=150)
@@ -27,8 +26,8 @@ def get_input_text():
 def create_pdf(english_text, arabic_text, summarized_text):
     pdf = FPDF()
     pdf.add_page()
-    pdf.add_font("Arial", fname="arial.ttf", uni=True)  # Ensure you have 'arial.ttf' or another suitable font
-    pdf.set_font("Arial", size=12)
+    pdf.add_font("DejaVu", "", "DejaVuSansCondensed.ttf", uni=True)
+    pdf.set_font("DejaVu", size=12)
     pdf.cell(200, 10, txt="English Text:", ln=True)
     pdf.multi_cell(0, 10, english_text)
     pdf.cell(200, 10, txt="Arabic Translation:", ln=True)
@@ -39,17 +38,16 @@ def create_pdf(english_text, arabic_text, summarized_text):
     pdf.output(filename)
     return filename
 
-# Define chains for text processing
+# Run the sequential chain function
 def run_sequential_chains(review):
-    # Setup for sequential chains
-    chain_1 = LLMChain(llm=model, prompt=ChatPromptTemplate("Provide me with the following English text :\n{review}"), output_key="english_text")
-    chain_2 = LLMChain(llm=model, prompt=ChatPromptTemplate("Translate the following text into Arabic:\n{english_text}"), output_key="Arabic_text")
-    chain_3 = LLMChain(llm=model, prompt=ChatPromptTemplate("Summarize the following text in Arabic:\n{Arabic_text}"), output_key="final_plan")
-
-    seq_chain = SequentialChain(chains=[chain_1, chain_2, chain_3],
-                                input_variables=['review'],
-                                output_variables=['english_text', 'Arabic_text', 'final_plan'],
-                                verbose=True)
+    seq_chain = SequentialChain(chains=[
+        LLMChain(llm=model, prompt=ChatPromptTemplate("Provide me with the following English text :\n{review}"), output_key="english_text"),
+        LLMChain(llm=model, prompt=ChatPromptTemplate("Translate the following text into Arabic text :\n{english_text}"), output_key="Arabic_text"),
+        LLMChain(llm=model, prompt=ChatPromptTemplate("Summarize the following text in Arabic language :\n{Arabic_text}"), output_key="final_plan")
+    ],
+    input_variables=['review'],
+    output_variables=['english_text', 'Arabic_text', 'final_plan'],
+    verbose=True)
     return seq_chain(review)
 
 def main():
@@ -58,9 +56,9 @@ def main():
 
     if user_input:
         results = run_sequential_chains(user_input)
-        English = print(results['english_text'])
-        Arabic = print(results['Arabic_text'])
-        Summarize = print(results['final_plan'])
+        English = results['english_text']
+        Arabic = results['Arabic_text']
+        Summarize = results['final_plan']
 
         if st.button("Translate to Arabic"):
             st.text_area("Arabic Translation:", Arabic, height=150)
