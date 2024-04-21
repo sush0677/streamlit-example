@@ -27,8 +27,8 @@ def get_input_text():
 def create_pdf(english_text, arabic_text, summarized_text):
     pdf = FPDF()
     pdf.add_page()
-    pdf.add_font("DejaVu", "", "DejaVuSansCondensed.ttf", uni=True)
-    pdf.set_font("DejaVu", size=12)
+    pdf.add_font("Arial", fname="arial.ttf", uni=True)  # Ensure you have 'arial.ttf' or another suitable font
+    pdf.set_font("Arial", size=12)
     pdf.cell(200, 10, txt="English Text:", ln=True)
     pdf.multi_cell(0, 10, english_text)
     pdf.cell(200, 10, txt="Arabic Translation:", ln=True)
@@ -39,35 +39,25 @@ def create_pdf(english_text, arabic_text, summarized_text):
     pdf.output(filename)
     return filename
 
-# Run the sequential chain function
+# Define chains for text processing
 def run_sequential_chains(review):
     # Setup for sequential chains
-    template1 = "Provide me with the following English text :\n{review}"
-    prompt1 = ChatPromptTemplate.from_template(template1)
-    chain_1 = LLMChain(llm=model, prompt=prompt1, output_key="english_text")
-
-    template2 = "Translate the following text into Arabic text :\n{english_text}"
-    prompt2 = ChatPromptTemplate.from_template(template2)
-    chain_2 = LLMChain(llm=model, prompt=prompt2, output_key="Arabic_text")
-
-    template3 = "Summarize the following text in Arabic language :\n{Arabic_text}"
-    prompt3 = ChatPromptTemplate.from_template(template3)
-    chain_3 = LLMChain(llm=model, prompt=prompt3, output_key="final_plan")
+    chain_1 = LLMChain(llm=model, prompt=ChatPromptTemplate("Provide me with the following English text :\n{review}"), output_key="english_text")
+    chain_2 = LLMChain(llm=model, prompt=ChatPromptTemplate("Translate the following text into Arabic:\n{english_text}"), output_key="Arabic_text")
+    chain_3 = LLMChain(llm=model, prompt=ChatPromptTemplate("Summarize the following text in Arabic:\n{Arabic_text}"), output_key="final_plan")
 
     seq_chain = SequentialChain(chains=[chain_1, chain_2, chain_3],
                                 input_variables=['review'],
                                 output_variables=['english_text', 'Arabic_text', 'final_plan'],
                                 verbose=True)
-    results = seq_chain(review)
-    return results
+    return seq_chain(review)
 
 def main():
     st.title("Text Processing App")
     user_input = get_input_text()
-    review = user_input
 
     if user_input:
-        results = run_sequential_chains(review)
+        results = run_sequential_chains(user_input)
         English = print(results['english_text'])
         Arabic = print(results['Arabic_text'])
         Summarize = print(results['final_plan'])
