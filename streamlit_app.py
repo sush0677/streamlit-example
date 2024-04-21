@@ -64,7 +64,7 @@ def main():
     st.title("Text Processing App")
     user_input = get_input_text()
     review = user_input
-    results = run_sequential_chains(review=review)
+    results = run_sequential_chains(review)
     English= print(results['english_text'])
     Arabic= print(results['Arabic_text'])
     Summarize= print(results['final_plan'])
