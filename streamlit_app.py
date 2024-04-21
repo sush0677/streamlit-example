@@ -27,7 +27,8 @@ def get_input_text():
 def create_pdf(english_text, arabic_text, summarized_text):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    pdf.add_font("DejaVu", "", "DejaVuSansCondensed.ttf", uni=True)
+    pdf.set_font("DejaVu", size=12)
     pdf.cell(200, 10, txt="English Text:", ln=True)
     pdf.multi_cell(0, 10, english_text)
     pdf.cell(200, 10, txt="Arabic Translation:", ln=True)
@@ -64,28 +65,23 @@ def main():
     st.title("Text Processing App")
     user_input = get_input_text()
     review = user_input
-    results = run_sequential_chains(review)
-    English= print(results['english_text'])
-    Arabic= print(results['Arabic_text'])
-    Summarize= print(results['final_plan'])
 
     if user_input:
+        results = run_sequential_chains(review)
+        English = print(results['english_text'])
+        Arabic = print(results['Arabic_text'])
+        Summarize = print(results['final_plan'])
+
         if st.button("Translate to Arabic"):
-            arabic_text = Arabic
-            st.text_area("Arabic Translation:", arabic_text, height=150)
+            st.text_area("Arabic Translation:", Arabic, height=150)
 
         if st.button("Summarize in Arabic"):
-            summarized_text = Summarize
-            st.text_area("Arabic Summary:", summarized_text, height=150)
+            st.text_area("Arabic Summary:", Summarize, height=150)
 
         if st.button("Download PDF"):
-            
             pdf_filename = create_pdf(English, Arabic, Summarize)
             with open(pdf_filename, "rb") as file:
                 st.download_button("Download Text Summary", file, file_name=pdf_filename, mime="application/octet-stream")
-
-        else:
-            print("Please enter text or upload a file to proceed.")
 
 if __name__ == "__main__":
     main()
