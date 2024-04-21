@@ -57,36 +57,35 @@ def run_sequential_chains(review):
                                 input_variables=['review'],
                                 output_variables=['english_text', 'Arabic_text', 'final_plan'],
                                 verbose=True)
-    return seq_chain.run(review=review)
+    results = seq_chain(review)
+    return results
 
 def main():
     st.title("Text Processing App")
     user_input = get_input_text()
+    review = user_input
+    results = run_sequential_chains(review=review)
+    English= print(results['english_text'])
+    Arabic= print(results['Arabic_text'])
+    Summarize= print(results['final_plan'])
 
     if user_input:
-        results = None
-        if st.button("Process Text"):
-            results = run_sequential_chains(user_input)
-            st.session_state['results'] = results  # Store results in session state
-            st.success("Processing complete!")
-
-        if st.button("Show Arabic Translation") and 'results' in st.session_state:
-            arabic_text = st.session_state['results'].get('Arabic_text', "No Arabic text found.")
+        if st.button("Translate to Arabic"):
+            arabic_text = Arabic
             st.text_area("Arabic Translation:", arabic_text, height=150)
 
-        if st.button("Show Arabic Summary") and 'results' in st.session_state:
-            summarized_text = st.session_state['results'].get('final_plan', "No summary available.")
+        if st.button("Summarize in Arabic"):
+            summarized_text = Summarize
             st.text_area("Arabic Summary:", summarized_text, height=150)
 
-        if st.button("Download PDF") and 'results' in st.session_state:
-            english_text = st.session_state['results'].get('english_text', "")
-            arabic_text = st.session_state['results'].get('Arabic_text', "")
-            summarized_text = st.session_state['results'].get('final_plan', "")
-            pdf_filename = create_pdf(english_text, arabic_text, summarized_text)
+        if st.button("Download PDF"):
+            
+            pdf_filename = create_pdf(English, Arabic, Summarize)
             with open(pdf_filename, "rb") as file:
                 st.download_button("Download Text Summary", file, file_name=pdf_filename, mime="application/octet-stream")
-    else:
-        st.warning("Please enter text or upload a file to proceed.")
+
+        else:
+            print("Please enter text or upload a file to proceed.")
 
 if __name__ == "__main__":
     main()
