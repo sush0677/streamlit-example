@@ -39,9 +39,9 @@ def create_pdf(english_text, arabic_text, summarized_text):
     return filename
 
 # Run the sequential chain function
-def run_sequential_chains(user_input):
+def run_sequential_chains(review):
     # Setup for sequential chains
-    template1 = "Provide me with the following English text :\n{user_input}"
+    template1 = "Provide me with the following English text :\n{review}"
     prompt1 = ChatPromptTemplate.from_template(template1)
     chain_1 = LLMChain(llm=model, prompt=prompt1, output_key="english_text")
 
@@ -54,34 +54,34 @@ def run_sequential_chains(user_input):
     chain_3 = LLMChain(llm=model, prompt=prompt3, output_key="final_plan")
 
     seq_chain = SequentialChain(chains=[chain_1, chain_2, chain_3],
-                                input_variables=user_input,  # Use the variable directly in your template
+                                input_variables=['review'],
                                 output_variables=['english_text', 'Arabic_text', 'final_plan'],
                                 verbose=True)
-    return seq_chain.run(user_input)
+    return seq_chain.run(review=review)
 
 def main():
     st.title("Text Processing App")
     user_input = get_input_text()
 
     if user_input:
-        results = st.session_state.get('results')
+        results = None
         if st.button("Process Text"):
             results = run_sequential_chains(user_input)
             st.session_state['results'] = results  # Store results in session state
             st.success("Processing complete!")
 
-        if st.button("Show Arabic Translation") and results:
-            arabic_text = results.get('Arabic_text', "No Arabic text found.")
+        if st.button("Show Arabic Translation") and 'results' in st.session_state:
+            arabic_text = st.session_state['results'].get('Arabic_text', "No Arabic text found.")
             st.text_area("Arabic Translation:", arabic_text, height=150)
 
-        if st.button("Show Arabic Summary") and results:
-            summarized_text = results.get('final_plan', "No summary available.")
+        if st.button("Show Arabic Summary") and 'results' in st.session_state:
+            summarized_text = st.session_state['results'].get('final_plan', "No summary available.")
             st.text_area("Arabic Summary:", summarized_text, height=150)
 
-        if st.button("Download PDF") and results:
-            english_text = results.get('english_text', "")
-            arabic_text = results.get('Arabic_text', "")
-            summarized_text = results.get('final_plan', "")
+        if st.button("Download PDF") and 'results' in st.session_state:
+            english_text = st.session_state['results'].get('english_text', "")
+            arabic_text = st.session_state['results'].get('Arabic_text', "")
+            summarized_text = st.session_state['results'].get('final_plan', "")
             pdf_filename = create_pdf(english_text, arabic_text, summarized_text)
             with open(pdf_filename, "rb") as file:
                 st.download_button("Download Text Summary", file, file_name=pdf_filename, mime="application/octet-stream")
