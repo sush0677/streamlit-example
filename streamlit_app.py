@@ -57,7 +57,7 @@ def run_sequential_chains(user_input):
                                 input_variables=['user_input'],  # Use the variable directly in your template
                                 output_variables=['english_text', 'Arabic_text', 'final_plan'],
                                 verbose=True)
-    return seq_chain.run(user_input=user_input)
+    return seq_chain.run(user_input)
 
 def main():
     st.title("Text Processing App")
