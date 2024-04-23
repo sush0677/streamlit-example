@@ -52,7 +52,7 @@ if st.button("Show Original Text"):
 
 if st.button("Translate to Arabic"):
     if raw_text:
-        results = seq_chain({"review": raw_text})
+        results = seq_chain({raw_text})
         st.write("Translated Arabic Text:")
         st.write(results["Arabic_text"])
     else:
@@ -60,7 +60,7 @@ if st.button("Translate to Arabic"):
 
 if st.button("Summarization in Arabic"):
     if raw_text:
-        results = seq_chain({"review": raw_text})
+        results = seq_chain({raw_text})
         st.write("Summary in Arabic:")
         st.write(results["final_plan"])
     else:
