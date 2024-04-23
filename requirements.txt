@@ -7,4 +7,3 @@ azure.identity
 langchain
 openai
 langchain_openai
-fpdf

@@ -1,6 +1,4 @@
 import streamlit as st
-from fpdf import FPDF
-from io import BytesIO
 from azure.identity import ChainedTokenCredential, ManagedIdentityCredential, AzureCliCredential
 from langchain_core.messages import HumanMessage
 from langchain_openai import AzureChatOpenAI
@@ -35,46 +33,14 @@ seq_chain = SequentialChain(
     verbose=True
 )
 
-
-from fpdf import FPDF  # Assuming fpdf2 is installed as fpdf
-
-def create_downloadable_pdf(english_text, arabic_text, summary_text):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_auto_page_break(auto=True, margin=15)
-
-    # Add Unicode Font
-    font_path = 'fonts/DejaVuSansCondensed.ttf'  # Adjust the path according to your font directory
-    pdf.add_font('DejaVu', '', font_path, uni=True)
-    pdf.set_font('DejaVu', '', 14)
-
-    # Adding English text
-    pdf.cell(200, 10, txt="English Text:", ln=True)
-    pdf.multi_cell(0, 10, english_text)
-
-    # Adding Arabic translation
-    pdf.add_page()
-    pdf.cell(200, 10, txt="Arabic Translated Text:", ln=True)
-    pdf.multi_cell(0, 10, arabic_text)
-
-    # Adding Arabic summary
-    pdf.add_page()
-    pdf.cell(200, 10, txt="Arabic Summary:", ln=True)
-    pdf.multi_cell(0, 10, summary_text)
-
-    pdf_output = BytesIO()
-    pdf.output(pdf_output, 'F')
-    pdf_output.seek(0)  # Important: reset buffer position to the beginning after writing
-    return pdf_output.getvalue()
-
 # Streamlit User Interface for uploading and processing text
-st.title("Text Translation and Summary App")
+st.title("English to Arabic Translation")
 uploaded_file = st.file_uploader("Upload your file", type=['txt'])
 
 if uploaded_file is not None:
     raw_text = str(uploaded_file.read(), 'utf-8')  # Convert to string
 else:
-    raw_text = st.text_area("Or enter the text to translate and summarize", height=150)
+    raw_text = st.text_area("Or Enter the text", height=150)
 
 if raw_text:
     results = seq_chain({"review": raw_text})  # Assuming seq_chain is defined elsewhere and works correctly
@@ -94,7 +60,3 @@ if raw_text:
         st.write("Summary in Arabic:")
         st.write(summary_text)
 
-    # Button to trigger PDF download
-    if st.button("Download PDF"):
-        pdf_bytes = create_downloadable_pdf(english_text, arabic_text, summary_text)
-        st.download_button(label="Download PDF", data=pdf_bytes, file_name="translated_summary.pdf", mime="application/pdf")
