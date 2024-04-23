@@ -1,5 +1,5 @@
 import streamlit as st
-from fpdf import FPDF2
+from fpdf import FPDF
 from io import BytesIO
 from azure.identity import ChainedTokenCredential, ManagedIdentityCredential, AzureCliCredential
 from langchain_core.messages import HumanMessage
@@ -36,7 +36,7 @@ seq_chain = SequentialChain(
 
 
 def create_downloadable_pdf(english_text, arabic_text, summary_text):
-    pdf = FPDF2()
+    pdf = FPDF()
     pdf.add_page()
     pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)  # Ensure the DejaVu font files are in your project directory
     pdf.set_font('DejaVu', '', 14)
