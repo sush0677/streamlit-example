@@ -1,5 +1,5 @@
 import streamlit as st
-from fpdf import FPDF
+from fpdf import FPDF2
 from io import BytesIO
 from azure.identity import ChainedTokenCredential, ManagedIdentityCredential, AzureCliCredential
 from langchain_core.messages import HumanMessage
@@ -59,7 +59,7 @@ def create_downloadable_pdf(english_text, arabic_text, summary_text):
     pdf.output(pdf_output, 'F')
     pdf_output.seek(0)  # Important: reset buffer position to the beginning after writing
     return pdf_output.getvalue()
-    
+
 # Streamlit User Interface for uploading and processing text
 st.title("Text Translation and Summary App")
 uploaded_file = st.file_uploader("Upload your file", type=['txt'])
