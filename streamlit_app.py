@@ -14,31 +14,6 @@ model = AzureChatOpenAI(
     temperature=0,
     openai_api_version="2024-02-15-preview"
 )
-# Function to handle file upload and text input
-def get_input_text():
-    input_text = st.text_area("Enter text to process or upload a file:", height=150)
-    uploaded_file = st.file_uploader("Or upload a text file:", type=['txt'])
-    if uploaded_file is not None:
-        input_text = str(uploaded_file.read(), 'utf-8')
-    return input_text
-
-# Function to create a PDF from text data
-def create_pdf(english_text, arabic_text, summarized_text):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.add_font("DejaVu", "", "DejaVuSansCondensed.ttf", uni=True)
-    pdf.set_font("DejaVu", size=12)
-    pdf.cell(200, 10, txt="English Text:", ln=True)
-    pdf.multi_cell(0, 10, english_text)
-    pdf.cell(200, 10, txt="Arabic Translation:", ln=True)
-    pdf.multi_cell(0, 10, arabic_text)
-    pdf.cell(200, 10, txt="Summarized Arabic Text:", ln=True)
-    pdf.multi_cell(0, 10, summarized_text)
-    filename = 'Text_Summary.pdf'
-    pdf.output(filename)
-    return filename
-
-# Run the sequential chain function
 def run_sequential_chains(review):
     seq_chain = SequentialChain(chains=[
         LLMChain(llm=model, prompt=ChatPromptTemplate("Provide me with the following English text :\n{review}"), output_key="english_text"),
@@ -48,28 +23,20 @@ def run_sequential_chains(review):
     input_variables=['review'],
     output_variables=['english_text', 'Arabic_text', 'final_plan'],
     verbose=True)
+    
     return seq_chain(review)
 
-def main():
-    st.title("Text Processing App")
-    user_input = get_input_text()
-
-    if user_input:
-        results = run_sequential_chains(user_input)
-        English = results['english_text']
-        Arabic = results['Arabic_text']
-        Summarize = results['final_plan']
-
-        if st.button("Translate to Arabic"):
-            st.text_area("Arabic Translation:", Arabic, height=150)
-
-        if st.button("Summarize in Arabic"):
-            st.text_area("Arabic Summary:", Summarize, height=150)
-
-        if st.button("Download PDF"):
-            pdf_filename = create_pdf(English, Arabic, Summarize)
-            with open(pdf_filename, "rb") as file:
-                st.download_button("Download Text Summary", file, file_name=pdf_filename, mime="application/octet-stream")
-
-if __name__ == "__main__":
-    main()
+# Streamlit app interface
+st.title("Language Processing with LangChain and Azure")
+review_text = st.text_area("Enter text to process:", "Type your review here...")
+if st.button("Process Text"):
+    output = run_sequential_chains(review_text)
+    st.write("## Processed Outputs")
+    st.write("### English Text")
+    st.write(output['english_text'])
+    st.write("### Arabic Text")
+    st.write(output['Arabic_text'])
+    st.write("### Arabic Summary")
+    st.write(output['final_plan'])
+else:
+    st.write("Enter text and click the 'Process Text' button.")
