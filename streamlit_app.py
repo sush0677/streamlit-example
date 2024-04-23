@@ -36,9 +36,10 @@ seq_chain = SequentialChain(
 
 
 def create_downloadable_pdf(english_text, arabic_text, summary_text):
-    pdf = FPDF()
+    pdf = FPDF2()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)  # Ensure the DejaVu font files are in your project directory
+    pdf.set_font('DejaVu', '', 14)
     
     # Adding English text
     pdf.cell(200, 10, txt="English Text:", ln=1)
@@ -57,8 +58,8 @@ def create_downloadable_pdf(english_text, arabic_text, summary_text):
     pdf_output = BytesIO()
     pdf.output(pdf_output, 'F')
     pdf_output.seek(0)  # Important: reset buffer position to the beginning after writing
-    return pdf_output
-
+    return pdf_output.getvalue()
+    
 # Streamlit User Interface for uploading and processing text
 st.title("Text Translation and Summary App")
 uploaded_file = st.file_uploader("Upload your file", type=['txt'])
