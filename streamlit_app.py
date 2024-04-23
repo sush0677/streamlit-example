@@ -18,11 +18,11 @@ template1 = "Provide me with the following English text :\n{review}"
 prompt1 = ChatPromptTemplate.from_template(template1)
 chain_1 = LLMChain(llm=model, prompt=prompt1, output_key="english_text")
 
-template2 = "Translate the following text into Arabic text  :\n{english_text}"
+template2 = "Translate the following text from English to Arabic text  :\n{english_text}"
 prompt2 = ChatPromptTemplate.from_template(template2)
 chain_2 = LLMChain(llm=model, prompt=prompt2, output_key="Arabic_text")
 
-template3 = "Summarize the following text in Arabic language :\n{Arabic_text}"
+template3 = "Summarize the following text :\n{Arabic_text}"
 prompt3 = ChatPromptTemplate.from_template(template3)
 chain_3 = LLMChain(llm=model, prompt=prompt3, output_key="final_plan")
 
