@@ -32,22 +32,49 @@ seq_chain = SequentialChain(
     output_variables=['english_text', 'Arabic_text', 'final_plan'],
     verbose=True
 )
-
 # Streamlit User Interface
 st.title("Text Translation and Summary App")
 
-# User input
-user_input = st.text_area("Enter the text to translate and summarize", height=150)
-
-if st.button("Translate and Summarize"):
+# File upload
+uploaded_file = st.file_uploader("Upload your file", type=['txt'])
+if uploaded_file is not None:
+    raw_text = str(uploaded_file.read(), 'utf-8')  # Convert to string
+    results = seq_chain({"review": raw_text})
+    english_text = results["english_text"]
+    arabic_text = results["Arabic_text"]
+    summary_text = results["final_plan"]
+else:
+    user_input = st.text_area("Or enter the text to translate and summarize", height=150)
     if user_input:
-        # Processing the text
         results = seq_chain({"review": user_input})
-        st.write("Original English Text:")
-        st.write(results["english_text"])
-        st.write("Translated Arabic Text:")
-        st.write(results["Arabic_text"])
-        st.write("Summary in Arabic:")
-        st.write(results["final_plan"])
-    else:
-        st.error("Please enter some text to proceed.")
+        english_text = results["english_text"]
+        arabic_text = results["Arabic_text"]
+        summary_text = results["final_plan"]
+
+# Display the results
+if 'english_text' in locals():
+    st.write("Original English Text:")
+    st.write(english_text)
+    st.write("Translated Arabic Text:")
+    st.write(arabic_text)
+    st.write("Summary in Arabic:")
+    st.write(summary_text)
+
+# Function to create and download a PDF
+def create_downloadable_pdf(english_text, arabic_text, summary_text):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="English Text:", ln=True)
+    pdf.cell(200, 10, txt=english_text, ln=True)
+    pdf.cell(200, 10, txt="Arabic Translated Text:", ln=True)
+    pdf.cell(200, 10, txt=arabic_text, ln=True)
+    pdf.cell(200, 10, txt="Arabic Summary:", ln=True)
+    pdf.cell(200, 10, txt=summary_text, ln=True)
+    pdf_output = BytesIO()
+    pdf.output(pdf_output, 'F')
+    return pdf_output.getvalue()
+
+if st.button("Download PDF") and 'english_text' in locals():
+    pdf_bytes = create_downloadable_pdf(english_text, arabic_text, summary_text)
+    st.download_button(label="Download PDF", data=pdf_bytes, file_name="translated_summary.pdf", mime="application/pdf")
