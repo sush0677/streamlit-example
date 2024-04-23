@@ -34,88 +34,59 @@ seq_chain = SequentialChain(
     verbose=True
 )
 
+
 def create_downloadable_pdf(english_text, arabic_text, summary_text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-
+    
     # Adding English text
     pdf.cell(200, 10, txt="English Text:", ln=1)
     pdf.multi_cell(200, 10, english_text)
-
+    
     # Adding Arabic translation
     pdf.add_page()
     pdf.cell(200, 10, txt="Arabic Translated Text:", ln=1)
     pdf.multi_cell(200, 10, arabic_text)
-
+    
     # Adding Arabic summary
     pdf.add_page()
     pdf.cell(200, 10, txt="Arabic Summary:", ln=1)
     pdf.multi_cell(200, 10, summary_text)
-
+    
     pdf_output = BytesIO()
     pdf.output(pdf_output, 'F')
     pdf_output.seek(0)  # Important: reset buffer position to the beginning after writing
     return pdf_output
 
-# Streamlit User Interface
+# Streamlit User Interface for uploading and processing text
 st.title("Text Translation and Summary App")
-
-# File upload and text input
 uploaded_file = st.file_uploader("Upload your file", type=['txt'])
+
 if uploaded_file is not None:
     raw_text = str(uploaded_file.read(), 'utf-8')  # Convert to string
 else:
     raw_text = st.text_area("Or enter the text to translate and summarize", height=150)
 
-# Process and display buttons
-if st.button("Show Original Text"):
-    if raw_text:
-        st.write("Original Text:")
-        st.write(raw_text)
-    else:
-        st.error("No text provided.")
-
-if st.button("Translate to Arabic"):
-    if raw_text:
-        results = seq_chain({raw_text})
-        st.write("Translated Arabic Text:")
-        st.write(results["Arabic_text"])
-    else:
-        st.error("Please provide text to translate.")
-
-if st.button("Summarization in Arabic"):
-    if raw_text:
-        results = seq_chain({raw_text})
-        st.write("Summary in Arabic:")
-        st.write(results["final_plan"])
-    else:
-        st.error("Please provide text to summarize.")
-
-    results = seq_chain({"review": raw_text})
+if raw_text:
+    results = seq_chain({"review": raw_text})  # Assuming seq_chain is defined elsewhere and works correctly
     english_text = results["english_text"]
     arabic_text = results["Arabic_text"]
     summary_text = results["final_plan"]
-# Button to trigger PDF download
-    def create_downloadable_pdf():
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.add_page()
-        pdf.cell(0, 10, 'English Text:', 0, 1)
-        pdf.multi_cell(0, 10, english_text)
-        pdf.add_page()
-        pdf.cell(0, 10, 'Arabic Translated Text:', 0, 1)
-        pdf.multi_cell(0, 10, arabic_text)
-        pdf.add_page()
-        pdf.cell(0, 10, 'Arabic Summary:', 0, 1)
-        pdf.multi_cell(0, 10, summary_text)
-        pdf_output = BytesIO()
-        pdf.output(pdf_output, 'F')
-        pdf_output.seek(0)  # Reset buffer pointer
-        return pdf_output.getvalue()
 
-    # Button to download PDF
+    if st.button("Show Original Text"):
+        st.write("Original Text:")
+        st.write(raw_text)
+
+    if st.button("Translate to Arabic"):
+        st.write("Translated Arabic Text:")
+        st.write(arabic_text)
+
+    if st.button("Summarization in Arabic"):
+        st.write("Summary in Arabic:")
+        st.write(summary_text)
+
+    # Button to trigger PDF download
     if st.button("Download PDF"):
-        pdf_bytes = create_downloadable_pdf()
+        pdf_bytes = create_downloadable_pdf(english_text, arabic_text, summary_text)
         st.download_button(label="Download PDF", data=pdf_bytes, file_name="translated_summary.pdf", mime="application/pdf")
