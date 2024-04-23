@@ -23,8 +23,8 @@ def run_sequential_chains(review):
     input_variables=['review'],
     output_variables=['english_text', 'Arabic_text', 'final_plan'],
     verbose=True)
-    
-    return seq_chain(review)
+    output = seq_chain(review)
+    return output
 
 # Streamlit app interface
 st.title("Language Processing with LangChain and Azure")
