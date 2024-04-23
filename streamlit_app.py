@@ -1,5 +1,6 @@
 import streamlit as st
 from fpdf import FPDF
+from io import BytesIO
 from azure.identity import ChainedTokenCredential, ManagedIdentityCredential, AzureCliCredential
 from langchain_core.messages import HumanMessage
 from langchain_openai import AzureChatOpenAI
@@ -71,17 +72,32 @@ def create_downloadable_pdf(english_text, arabic_text, summary_text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="English Text:", ln=True)
-    pdf.cell(200, 10, txt=english_text, ln=True)
-    pdf.cell(200, 10, txt="Arabic Translated Text:", ln=True)
-    pdf.cell(200, 10, txt=arabic_text, ln=True)
-    pdf.cell(200, 10, txt="Arabic Summary:", ln=True)
-    pdf.cell(200, 10, txt=summary_text, ln=True)
+    pdf.add_page()
+
+    # Adding English text
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, 'English Text:', 0, 1)
+    pdf.multi_cell(0, 10, english_text)
+
+    # Adding Arabic translation
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, 'Arabic Translated Text:', 0, 1)
+    pdf.multi_cell(0, 10, arabic_text)
+
+    # Adding Arabic summary
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, 'Arabic Summary:', 0, 1)
+    pdf.multi_cell(0, 10, summary_text)
+
     pdf_output = BytesIO()
     pdf.output(pdf_output, 'F')
-    return pdf_output.getvalue()
+    pdf_output.seek(0)  # Move to the beginning of the BytesIO buffer
+    return pdf_output
 
-if st.button("Download PDF") and raw_text:
-    results = seq_chain({"review": raw_text})
+# Button to trigger PDF download
+if st.button("Download PDF") and 'results' in locals():
+    results = seq_chain({raw_text})
     pdf_bytes = create_downloadable_pdf(results["english_text"], results["Arabic_text"], results["final_plan"])
     st.download_button(label="Download PDF", data=pdf_bytes, file_name="translated_summary.pdf", mime="application/pdf")
