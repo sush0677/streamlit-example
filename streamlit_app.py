@@ -1,11 +1,17 @@
 import streamlit as st
 from fpdf import FPDF
+import os
 from io import BytesIO
 from azure.identity import ChainedTokenCredential, ManagedIdentityCredential, AzureCliCredential
 from langchain_core.messages import HumanMessage
 from langchain_openai import AzureChatOpenAI
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.chains import LLMChain, SequentialChain
+
+
+# Assuming the font file is in a folder named 'fonts' in the same directory as your script
+font_path = os.path.join(os.path.dirname(__file__), 'fonts', 'DejaVuSansCondensed.ttf')
+pdf.add_font('DejaVu', '', font_path, uni=True)
 
 # Initialize the AzureChatOpenAI model
 model = AzureChatOpenAI(
@@ -38,19 +44,18 @@ seq_chain = SequentialChain(
 def create_downloadable_pdf(english_text, arabic_text, summary_text):
     pdf = FPDF()
     pdf.add_page()
-    pdf.add_font('DejaVu', '', 'DejaVuSansCondensed.ttf', uni=True)  # Ensure the DejaVu font files are in your project directory
+    # Make sure to adjust the path to where you store your font files
+    font_path = os.path.join(os.path.dirname(__file__), 'DejaVuSansCondensed.ttf')
+    pdf.add_font('DejaVu', '', font_path, uni=True)
     pdf.set_font('DejaVu', '', 14)
     
-    # Adding English text
     pdf.cell(200, 10, txt="English Text:", ln=1)
     pdf.multi_cell(200, 10, english_text)
     
-    # Adding Arabic translation
     pdf.add_page()
     pdf.cell(200, 10, txt="Arabic Translated Text:", ln=1)
     pdf.multi_cell(200, 10, arabic_text)
     
-    # Adding Arabic summary
     pdf.add_page()
     pdf.cell(200, 10, txt="Arabic Summary:", ln=1)
     pdf.multi_cell(200, 10, summary_text)
